@@ -1,3 +1,6 @@
+This code modifies main.py file for use with Argoverse dataset.
+
+
 # A Baseline for 3D Multi-Object Tracking 
 
 <img align="center" src="https://github.com/xinshuoweng/AB3DMOT/blob/master/github_demo.gif">
