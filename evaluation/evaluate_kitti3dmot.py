@@ -13,6 +13,8 @@ except:
 
 import mailpy
 from box_util import boxoverlap, box3doverlap
+import argoverse
+from argoverse.data_loading.argoverse_tracking_loader import ArgoverseTrackingLoader
 
 num_sample_pts = 11.0
 
@@ -75,30 +77,44 @@ class trackingEvaluation(object):
              falsepositives - number of false positives (FP)
              missed         - number of missed targets (FN)
     """
-
-    def __init__(self, t_sha, gt_path="./evaluation", max_truncation = 0, min_height = 25, max_occlusion = 2, mail=None, cls="car", eval_3diou=True, eval_2diou=False):
+    ## change cls,paths
+    def __init__(self, t_sha, gt_path="./evaluation", max_truncation = 0, min_height = 25, max_occlusion = 2, mail=None, cls="pedestrian", eval_3diou=True, eval_2diou=False):
         # get number of sequences and
         # get number of frames per sequence from test mapping
         # (created while extracting the benchmark)
         filename_test_mapping = "evaluation/evaluate_tracking.seqmap"
         self.n_frames         = []
         self.sequence_name    = []
-        with open(filename_test_mapping, "r") as fh:
-            for i,l in enumerate(fh):
-                fields = l.split(" ")
-                self.sequence_name.append("%04d" % int(fields[0]))
-                self.n_frames.append(int(fields[3]) - int(fields[2])+1)
-        fh.close()
-        self.n_sequences = i+1
+        #with open(filename_test_mapping, "r") as fh:
+        #    for i,l in enumerate(fh):
+        #        fields = l.split(" ")
+        #        self.sequence_name.append("%04d" % int(fields[0]))
+        #        self.n_frames.append(int(fields[3]) - int(fields[2])+1)
+        #fh.close()
+        
+        root_dir =  './../argodataset/argoverse-tracking/sample/'
+        argoverse_loader = ArgoverseTrackingLoader(root_dir)
+        self.n_sequences = len(argoverse_loader)
+        for seq in range(self.n_sequences):
+            self.sequence_name.append(argoverse_loader.log_list[seq])
+            argoverse_data = argoverse_loader[seq]
+            nlf = argoverse_data.num_lidar_frame
+            self.n_frames.append(nlf)
+     
+        #self.sequence_name = ["c6911883-1843-3727-8eaa-41dc8cda8993"]
+        #self.n_frames = [50]
+        #self.n_sequences = 1
 
         # mail object
         self.mail = mail
 
         # class to evaluate, i.e. pedestrian or car
         self.cls = cls
+        print(cls)
 
         # data and parameter
-        self.gt_path           = os.path.join(gt_path, "label")
+        self.gt_path           = os.path.join(gt_path, "argo_sample_label")
+        print(self.gt_path)
         self.t_sha             = t_sha
         self.t_path            = os.path.join("./results", t_sha, "data")
         
